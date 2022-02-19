@@ -1,0 +1,114 @@
+REquirement :
+Create web automation test suite using Selenium Web Driver / Cypress/playwright which tests for following scenarios:
+
+
+Scenario 1: Load a Google search page. Assert that search page contains search box and google logo.
+
+
+Scenario 2: Load a Google search page and search for a particular search term. Assert that search results are returned on the search page.
+
+
+Scenario 3: Load a Google search page and search for a particular search term. Once the search results are loaded, the first result item is clicked the page is then redirected to the respective URL. Assert that url opened after clicking is same as the url from the search result.
+
+
+Optional feature:
+- Should have multi-browser support
+- Parametrize the search text value
+
+Solution: 
+from selenium import webdriver 
+import time
+from selenium.webdriver.common.key import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import service
+from selenium.webdriver.ie.service import service
+from selenium.webdriver.edgedriver.service import service
+
+
+driver=webdiver.Chrome(executable_path="C:\Program Files\Python310\chromdriver")
+driver=webdiver.Ie(executable_path="C:\Program Files\Python310\IEDriverserver")
+driver=webdiver.Edgedriver(executable_path="C:\Program Files\Python310\edgedriver")
+
+
+driver.get("https://www.google.com/")
+driver.get("https://nlpcaptcha.com/en/index.html")
+driver.maximize_window()
+time.sleep(7)                         # sleep 5 sc
+
+
+driver.find_element(By.XPATH,//*[@id="input"]).click() # search a product 
+driver.find_element(By.XPATH,/html/body/div[1]/div[2]/div/img).click()
+time.sleep(7)  # Load a Google search page. Assert that search page contains search box and google logo.
+
+keyword = "nlpcaptcha"
+driver.get("https://google.co.in / search?q ="+keyword)
+time.sleep(7)  # Load a Google search page and search for a particular search term. Assert that search results are returned on the search page.
+
+driver = webdriver.Edgedriver()
+link = 'https://nlpcaptcha.in/en/advertiser.html'
+driver.get(link)
+print(driver.current_url) #Load a Google search page and search for a particular search term. Once the search results are loaded, the first result item is clicked the page is then redirected to the respective URL. Assert that url opened after clicking is same as the url from the search result.
+
+
+
+driver.close() # close the browser
+driver.quit() # quit all browsers
+
+----------------------------------------------------------------
+import pytest
+from selenium import webdriver
+import time
+driver = None
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--browser_name", action="store", default="chrome"
+    )
+
+
+@pytest.fixture(scope="class")
+def setup(request):
+    global driver
+    browser_name=request.config.getoption("browser_name")
+    if browser_name == "chrome":
+        driver = webdriver.Chrome(executable_path="C:\\chromedriver.exe")
+    elif browser_name == "firefox":
+        driver = webdriver.Firefox(executable_path="C:\\geckodriver.exe")
+    elif browser_name == "IE":
+        print("IE driver")
+    driver.get("https://rahulshettyacademy.com/angularpractice/")
+    driver.maximize_window()
+
+    request.cls.driver = driver
+    yield
+    driver.close()
+
+
+@pytest.mark.hookwrapper
+def pytest_runtest_makereport(item):
+    """
+        Extends the PyTest Plugin to take and embed screenshot in html report, whenever test fails.
+        :param item:
+        """
+    pytest_html = item.config.pluginmanager.getplugin('html')
+    outcome = yield
+    report = outcome.get_result()
+    extra = getattr(report, 'extra', [])
+
+    if report.when == 'call' or report.when == "setup":
+        xfail = hasattr(report, 'wasxfail')
+        if (report.skipped and xfail) or (report.failed and not xfail):
+            file_name = report.nodeid.replace("::", "_") + ".png"
+            _capture_screenshot(file_name)
+            if file_name:
+                html = '<div><img src="%s" alt="screenshot" style="width:304px;height:228px;" ' \
+                       'onclick="window.open(this.src)" align="right"/></div>' % file_name
+                extra.append(pytest_html.extras.html(html))
+        report.extra = extra
+
+
+def _capture_screenshot(name):
+        driver.get_screenshot_as_file(name)
+------------------------------------------------------------------------------------
+
+
